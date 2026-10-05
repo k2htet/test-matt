@@ -1,6 +1,6 @@
 # Todo workspace
 
-Shared React starter and draft API contract for [issue #1](https://github.com/k2htet/test-matt/issues/1). Backend-partner agreement and account provisioning are pending; see [the contract handoff](docs/api-contract.md).
+Shared React starter and backend-approved API contract for [issue #1](https://github.com/k2htet/test-matt/issues/1). The user confirmed backend-partner approval and account provisioning on 2026-10-05; see [the contract handoff](docs/api-contract.md).
 
 ## Fresh-clone setup
 

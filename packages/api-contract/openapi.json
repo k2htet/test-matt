@@ -3,7 +3,7 @@
   "info": {
     "title": "Todo API",
     "version": "0.1.0",
-    "description": "Draft for backend-partner approval (issue #1). Cookie sessions and strict Origin validation on every mutation, including login/logout. See docs/api-contract.md.",
+    "description": "Backend-partner approved contract (issue #1); approval confirmed by the user on 2026-10-05. Cookie sessions and strict Origin validation on every mutation, including login/logout. See docs/api-contract.md.",
     "contact": {
       "name": "Frontend and backend owners",
       "url": "https://github.com/k2htet/test-matt/issues/1"
