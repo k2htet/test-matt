@@ -1,0 +1,25 @@
+{
+  "name": "@test-matt/api-contract",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "types": "src/schema.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/schema.d.ts"
+    }
+  },
+  "scripts": {
+    "generate": "openapi-typescript openapi.json -o src/schema.d.ts",
+    "check": "redocly lint openapi.json && openapi-typescript openapi.json -o src/schema.d.ts --check",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^2.11.0",
+    "openapi-typescript": "^7.10.1",
+    "vitest": "^3.2.4",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  }
+}

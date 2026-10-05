@@ -1,0 +1,8 @@
+.agents/
+.scratch/
+skills-lock.json
+pnpm-lock.yaml
+node_modules/
+dist/
+coverage/
+packages/api-contract/src/schema.d.ts

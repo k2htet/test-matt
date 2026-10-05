@@ -1,0 +1,575 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Todo API",
+    "version": "0.1.0",
+    "description": "Draft for backend-partner approval (issue #1). Cookie sessions and strict Origin validation on every mutation, including login/logout. See docs/api-contract.md.",
+    "contact": {
+      "name": "Frontend and backend owners",
+      "url": "https://github.com/k2htet/test-matt/issues/1"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local NestJS backend (not implemented in this ticket)."
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Provisioned-account cookie sessions."
+    },
+    {
+      "name": "Todos",
+      "description": "Todos belonging to the current user."
+    }
+  ],
+  "security": [
+    {
+      "sessionCookie": []
+    }
+  ],
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "operationId": "login",
+        "tags": ["Auth"],
+        "summary": "Establish a cookie session for a provisioned account",
+        "responses": {
+          "200": {
+            "description": "Authenticated user. Sets a new session cookie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "HttpOnly session cookie, Path=/, SameSite=Lax; Secure in production. Logout expires it.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON or request validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid email/password; INVALID_CREDENTIALS.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error; no internal details exposed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "operationId": "currentUser",
+        "tags": ["Auth"],
+        "summary": "Return the current authenticated user",
+        "responses": {
+          "200": {
+            "description": "Authenticated user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session missing or expired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error; no internal details exposed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "tags": ["Auth"],
+        "summary": "Invalidate the session and clear its cookie",
+        "responses": {
+          "204": {
+            "description": "Session cleared; also succeeds when already logged out.",
+            "headers": {
+              "Set-Cookie": {
+                "description": "HttpOnly session cookie, Path=/, SameSite=Lax; Secure in production. Logout expires it.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error; no internal details exposed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/todos": {
+      "get": {
+        "operationId": "listTodos",
+        "tags": ["Todos"],
+        "summary": "List only the current user\u2019s todos",
+        "responses": {
+          "200": {
+            "description": "Todos, ordered by creation oldest first; an empty list is [].",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Todo"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session missing or expired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error; no internal details exposed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createTodo",
+        "tags": ["Todos"],
+        "summary": "Create an incomplete todo for the current user",
+        "responses": {
+          "201": {
+            "description": "Created todo with completed=false.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Todo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON or request validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session missing or expired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error; no internal details exposed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTodo"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/todos/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Opaque todo identifier.",
+          "schema": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      ],
+      "patch": {
+        "operationId": "updateTodo",
+        "tags": ["Todos"],
+        "summary": "Update title and/or completion of an owned todo",
+        "responses": {
+          "200": {
+            "description": "Updated todo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Todo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON or request validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session missing or expired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error; no internal details exposed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing todo or todo owned by another user; NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTodo"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteTodo",
+        "tags": ["Todos"],
+        "summary": "Delete an owned todo",
+        "responses": {
+          "204": {
+            "description": "Todo deleted; no response body."
+          },
+          "400": {
+            "description": "Malformed JSON or request validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session missing or expired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error; no internal details exposed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing todo or todo owned by another user; NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "session",
+        "description": "HttpOnly cookie managed by the backend; frontend fetch uses credentials: include."
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "email"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "Todo": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "completed"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Opaque identifier. Clients must not parse or generate it."
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "description": "Trimmed title with at least one non-whitespace character."
+          },
+          "completed": {
+            "type": "boolean",
+            "description": "Whether the todo is complete; false on creation."
+          }
+        }
+      },
+      "CreateTodo": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "description": "Backend trims leading/trailing whitespace and rejects an empty result."
+          }
+        }
+      },
+      "UpdateTodo": {
+        "type": "object",
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S",
+            "description": "Backend trims leading/trailing whitespace and rejects an empty result."
+          },
+          "completed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ApiError": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "message"],
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "VALIDATION_ERROR",
+                  "INVALID_CREDENTIALS",
+                  "UNAUTHENTICATED",
+                  "FORBIDDEN",
+                  "NOT_FOUND",
+                  "INTERNAL_ERROR"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "description": "Safe displayable message; clients branch on code, never message."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
